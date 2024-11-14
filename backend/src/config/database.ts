@@ -1,22 +1,37 @@
-import { createPool, Pool } from 'mysql2/promise';
+import { PrismaClient } from '@prisma/client';
 
 class DatabaseConfig {
-  private static pool: Pool;
+  private static prisma: PrismaClient | null = null;
 
-  public static getPool(): Pool {
-    if (!this.pool) {
-      this.pool = createPool({
-        host: process.env.MYSQL_HOST || 'localhost',
-        user: process.env.MYSQL_USER || 'crm_user',
-        password: process.env.MYSQL_PASSWORD || 'crm_password',
-        database: process.env.MYSQL_DATABASE || 'crm_db',
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-      });
+
+  public static getPrismaClient(): PrismaClient {
+    if (!DatabaseConfig.prisma) {
+      DatabaseConfig.prisma = new PrismaClient();
+      DatabaseConfig.connect();
     }
-    return this.pool;
+    return DatabaseConfig.prisma;
+  }
+
+
+  private static async connect() {
+    try {
+      await DatabaseConfig.prisma?.$connect();
+      console.log('Connected to the MySQL database successfully');
+    } catch (error) {
+      console.error('Error connecting to MySQL database:', error);
+      throw error;
+    }
+  }
+
+  
+  public static async disconnect() {
+    try {
+      await DatabaseConfig.prisma?.$disconnect();
+      console.log('Disconnected from the MySQL database');
+    } catch (error) {
+      console.error('Error disconnecting from MySQL database:', error);
+    }
   }
 }
 
-export default DatabaseConfig.getPool();
+export default DatabaseConfig;
