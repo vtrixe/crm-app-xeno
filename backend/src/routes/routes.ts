@@ -4,6 +4,7 @@ import dataIngestionRoutes from './dataIngestionRoutes';
 import initializeAudienceSegmentation from './audiencesegmentation';
 import { AudienceSegmentationService } from '@/services/audience-segmentation';
 import campaign from './campaign';
+import message from './message';
 
 const router = express.Router();
 
@@ -39,6 +40,8 @@ router.get('/dashboard', (req, res) => {
 router.use('/api/data-ingestion', dataIngestionRoutes);
 
 router.use('/api/campaign', campaign);
+
+router.use('/api/message' , message);
 
 // Initialize and use audience segmentation routes
 (async () => {

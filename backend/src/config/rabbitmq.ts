@@ -31,6 +31,11 @@ class RabbitMQConfig {
       
       await this.channel.bindQueue('campaign-creation-queue', 'campaign-exchange', 'campaign.create');
       await this.channel.bindQueue('campaign-stats-queue', 'campaign-exchange', 'campaign.stats');
+
+      await this.channel.assertExchange('message-exchange', 'direct', { durable: true });
+      await this.channel.assertQueue('message-queue', { durable: true });
+      await this.channel.bindQueue('message-queue', 'message-exchange', 'message.send');
+
     }
     return this.channel;
   }

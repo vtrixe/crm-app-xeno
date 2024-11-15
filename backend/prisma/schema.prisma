@@ -8,68 +8,69 @@ generator client {
 }
 
 model User {
-  id        Int    @id @default(autoincrement())
-  googleId  String @unique
-  email     String @unique
-  name      String
-  roles     UserRole[] 
-  createdAt DateTime @default(now())
+  id               Int                @id @default(autoincrement())
+  googleId         String             @unique
+  email            String             @unique
+  name             String
+  roles            UserRole[] 
+  createdAt        DateTime           @default(now())
 
   // Campaign relations
-  createdCampaigns  Campaign[]  @relation("CreatedCampaigns")
-  updatedCampaigns  Campaign[]  @relation("UpdatedCampaigns")
-  campaignHistory   CampaignHistory[]
-  
+  createdCampaigns Campaign[]         @relation("CreatedCampaigns")
+  updatedCampaigns Campaign[]         @relation("UpdatedCampaigns")
+  campaignHistory  CampaignHistory[]
+
   // Other relations
-  AudienceSegment   AudienceSegment[]
+  AudienceSegment  AudienceSegment[]
 }
 
 model Role {
-  id       Int    @id @default(autoincrement())
-  roleName String @unique
-  users    UserRole[]
+  id               Int                @id @default(autoincrement())
+  roleName         String             @unique
+  users            UserRole[]
   WhitelistedEmail WhitelistedEmail[]
 }
 
 model UserRole {
-  id     Int  @id @default(autoincrement())
-  userId Int
-  roleId Int
-  User   User @relation(fields: [userId], references: [id])
-  Role   Role @relation(fields: [roleId], references: [id])
+  id               Int                @id @default(autoincrement())
+  userId           Int
+  roleId           Int
+  User             User               @relation(fields: [userId], references: [id])
+  Role             Role               @relation(fields: [roleId], references: [id])
 
   @@index([userId])
   @@index([roleId])
 }
 
 model WhitelistedEmail {
-  id     Int    @id @default(autoincrement())
-  email  String @unique
-  roleId Int
-  Role   Role   @relation(fields: [roleId], references: [id])
+  id               Int                @id @default(autoincrement())
+  email            String             @unique
+  roleId           Int
+  Role             Role               @relation(fields: [roleId], references: [id])
 
   @@index([roleId])
 }
 
 model Campaign {
-  id              Int               @id @default(autoincrement())
-  name            String
-  startDate       DateTime
-  endDate         DateTime
-  budget          Float
-  targetAudience  String
-  messageTemplate String            // Added field
-  status          CampaignStatus    @default(DRAFT)
-  createdBy       Int              
-  updatedBy       Int              
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id               Int                @id @default(autoincrement())
+  name             String
+  startDate        DateTime
+  endDate          DateTime
+  budget           Float
+  targetAudience   String
+  messageTemplate  String             // Added field for message content
+  status           CampaignStatus     @default(DRAFT)
+  createdBy        Int              
+  updatedBy        Int              
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   // Relations
-  creator         User              @relation("CreatedCampaigns", fields: [createdBy], references: [id])
-  updater         User              @relation("UpdatedCampaigns", fields: [updatedBy], references: [id])
-  stats           CampaignStats[]
-  history         CampaignHistory[]
+  creator          User               @relation("CreatedCampaigns", fields: [createdBy], references: [id])
+  updater          User               @relation("UpdatedCampaigns", fields: [updatedBy], references: [id])
+  stats            CampaignStats[]
+  history          CampaignHistory[]
+  messages         Message[]          // Added relation for messages
 
   @@index([status])
   @@index([createdBy])
@@ -86,35 +87,35 @@ enum CampaignStatus {
 }
 
 model CampaignStats {
-  id            Int      @id @default(autoincrement())
-  campaignId    Int
-  impressions   Int      @default(0)
-  clicks        Int      @default(0)
-  conversions   Int      @default(0)
-  cost          Float    @default(0)
-  ctr           Float?   @default(0)    // Click-through rate
-  cpc           Float?   @default(0)    // Cost per click
-  cpa           Float?   @default(0)    // Cost per acquisition
-  roi           Float?   @default(0)    // Return on investment
-  createdAt     DateTime @default(now())
+  id               Int                @id @default(autoincrement())
+  campaignId       Int
+  impressions      Int                @default(0)
+  clicks           Int                @default(0)
+  conversions      Int                @default(0)
+  cost             Float              @default(0)
+  ctr              Float?             @default(0)    // Click-through rate
+  cpc              Float?             @default(0)    // Cost per click
+  cpa              Float?             @default(0)    // Cost per acquisition
+  roi              Float?             @default(0)    // Return on investment
+  createdAt        DateTime           @default(now())
   
-  campaign      Campaign @relation(fields: [campaignId], references: [id])
+  campaign         Campaign           @relation(fields: [campaignId], references: [id])
 
   @@index([campaignId])
   @@index([createdAt])
 }
 
 model CampaignHistory {
-  id            Int      @id @default(autoincrement())
-  campaignId    Int
-  action        String   // e.g., 'STATUS_CHANGE', 'BUDGET_UPDATE', 'TEMPLATE_UPDATE'
-  oldValue      String   // Previous value before the change
-  newValue      String   // New value after the change
-  updatedBy     Int      // Added to track who made the change
-  updatedAt     DateTime @default(now())
+  id               Int                @id @default(autoincrement())
+  campaignId       Int
+  action           String             // e.g., 'STATUS_CHANGE', 'BUDGET_UPDATE', 'TEMPLATE_UPDATE'
+  oldValue         String             // Previous value before the change
+  newValue         String             // New value after the change
+  updatedBy        Int                // Added to track who made the change
+  updatedAt        DateTime           @default(now())
   
-  campaign      Campaign @relation(fields: [campaignId], references: [id])
-  user          User     @relation(fields: [updatedBy], references: [id])
+  campaign         Campaign           @relation(fields: [campaignId], references: [id])
+  user             User               @relation(fields: [updatedBy], references: [id])
 
   @@index([campaignId])
   @@index([updatedBy])
@@ -122,58 +123,85 @@ model CampaignHistory {
 }
 
 model Customer {
-  id            Int      @id @default(autoincrement())
-  name          String
-  email         String   @unique
-  phone         String?
-  address       String?
-  totalSpending Float    @default(0)
-  visits        Int      @default(0)
-  lastVisited   DateTime?
-  lastOrderDate DateTime?
-  createdAt     DateTime @default(now())
-  orders        Order[]  
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  phone            String?
+  address          String?
+  totalSpending    Float              @default(0)
+  visits           Int                @default(0)
+  lastVisited      DateTime?
+  lastOrderDate    DateTime?
+  createdAt        DateTime           @default(now())
+  orders           Order[]  
+  messages         Message[]          // Added relation for messages
 
   @@index([email, createdAt])
 }
 
 model AudienceSegment {
-  id            Int       @id @default(autoincrement())
-  name          String
-  filters       SegmentFilter[]
-  audienceSize  Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  createdBy     Int      
-  updatedBy     Int      
-  user          User     @relation(fields: [createdBy], references: [id])
+  id               Int                @id @default(autoincrement())
+  name             String
+  filters          SegmentFilter[]
+  audienceSize     Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  createdBy        Int      
+  updatedBy        Int      
+  user             User               @relation(fields: [createdBy], references: [id])
 
   @@index([createdBy])
 }
 
 model SegmentFilter {
-  id            Int          @id @default(autoincrement())
-  field         String      
-  operator      String      
-  value         Float?
-  dateValue     DateTime?
-  segmentId     Int
-  segment       AudienceSegment @relation(fields: [segmentId], references: [id])
+  id               Int                @id @default(autoincrement())
+  field            String      
+  operator         String      
+  value            Float?
+  dateValue        DateTime?
+  segmentId        Int
+  segment          AudienceSegment    @relation(fields: [segmentId], references: [id])
 
   @@index([segmentId])
 }
 
 model Order {
-  id         Int         @id @default(autoincrement())
-  customerId Int
-  amount     Float
-  status     String
-  createdAt  DateTime    @default(now())
-  customer   Customer    @relation(fields: [customerId], references: [id])
+  id               Int                @id @default(autoincrement())
+  customerId       Int
+  amount           Float
+  status           String
+  createdAt        DateTime           @default(now())
+  customer         Customer           @relation(fields: [customerId], references: [id])
 
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
+}
+
+model Message {
+  id               Int                @id @default(autoincrement())
+  campaignId       Int                // Links the message to a campaign
+  customerId       Int                // Links the message to the customer
+  content          String             // The actual message content sent to the customer
+  status           MessageStatus      @default(PENDING) // Tracks delivery status
+  sentAt           DateTime?          // Timestamp when the message was sent
+  deliveredAt      DateTime?          // Timestamp when the message was delivered
+  deliveryReceipt  String?            // Optional field to store additional metadata from the provider
+  createdAt        DateTime           @default(now())
+
+  campaign         Campaign           @relation(fields: [campaignId], references: [id])
+  customer         Customer           @relation(fields: [customerId], references: [id])
+
+  @@index([campaignId])
+  @@index([customerId])
+  @@index([status])
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
 }
 
 enum OrderStatus {
