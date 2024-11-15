@@ -9,7 +9,7 @@ import passport from './config/googleOauth';
 import routes from './routes/routes';
 import DataConsumer from './consumers/data-ingestion';
 import cors from 'cors';
-
+import { AudienceSegmentationService } from './services/audience-segmentation';
 dotenv.config();
 
 class App {

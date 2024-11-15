@@ -17,9 +17,9 @@ const authorize = (requiredRoles: string[]) => {
         include: { Role: true },
       });
 
-      const roleNames = userRoles.map((ur) => ur.Role.roleName);
+      const roleNames = userRoles.map((ur) => ur.Role.roleName.toLowerCase());  // Normalize to lowercase
 
-      if (!requiredRoles.some((role) => roleNames.includes(role))) {
+      if (!requiredRoles.some((role) => roleNames.includes(role.toLowerCase()))) {  // Normalize required roles
         res.status(403).json({ message: 'Access denied' });
         return;
       }
@@ -30,5 +30,6 @@ const authorize = (requiredRoles: string[]) => {
     }
   };
 };
+
 
 export default authorize;

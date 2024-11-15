@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/app.ts",
+    "start": "ts-node -r tsconfig-paths/register src/app.ts",
     "build": "tsc",
     "serve": "node dist/server.js",
     "seed": "ts-node prisma/seed.ts",
@@ -29,6 +29,7 @@
     "rate-limiter-redis": "^1.0.0",
     "redis": "^4.7.0",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -24,6 +24,13 @@ class RabbitMQConfig {
       
       await this.channel.bindQueue('customer-queue', 'data-ingestion', 'customer');
       await this.channel.bindQueue('order-queue', 'data-ingestion', 'order');
+
+      await this.channel.assertExchange('campaign-exchange', 'direct', { durable: true });
+      await this.channel.assertQueue('campaign-creation-queue', { durable: true });
+      await this.channel.assertQueue('campaign-stats-queue', { durable: true });
+      
+      await this.channel.bindQueue('campaign-creation-queue', 'campaign-exchange', 'campaign.create');
+      await this.channel.bindQueue('campaign-stats-queue', 'campaign-exchange', 'campaign.stats');
     }
     return this.channel;
   }
