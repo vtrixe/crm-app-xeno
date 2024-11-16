@@ -36,7 +36,12 @@ class App {
 
   private initializeMiddleware() {
     this.app.set('trust proxy', 1); 
-    this.app.use(cors());
+    this.app.use(cors(
+      {
+        origin: "http://localhost:3000", // Frontend origin
+        credentials: true, // Allow cookies
+      }
+    ));
     this.app.use(express.json());
     this.app.use(
       session({

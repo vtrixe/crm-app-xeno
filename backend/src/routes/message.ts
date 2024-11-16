@@ -16,4 +16,11 @@ router.post(
   MessageController.updateDeliveryStatus
 );
 
+router.get(
+  '/campaign/:campaignId/stats',
+  authorize(['Admin', 'Manager']),
+  MessageController.getCampaignStats
+);
+
+
 export default router;

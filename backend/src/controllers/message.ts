@@ -20,4 +20,14 @@ export default class MessageController {
       res.status(400).json({ error: (error as Error).message });
     }
   }
+
+  static async getCampaignStats(req: Request, res: Response) {
+    try {
+      const { campaignId } = req.params;
+      const stats = await MessageSendingService.getCampaignStats(Number(campaignId));
+      res.status(200).json({ message: 'Campaign stats fetched successfully', stats });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  }
 }

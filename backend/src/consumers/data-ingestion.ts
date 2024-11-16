@@ -29,7 +29,8 @@ export default class DataConsumer {
           channel.ack(msg);
         } catch (error) {
           console.error('Error processing customer data:', error);
-          channel.nack(msg, false, true);
+   
+      channel.nack(msg, false, false);
         }
       }
     });
@@ -43,10 +44,12 @@ export default class DataConsumer {
           status: data.status,
           createdAt: new Date(),
         };
-
+    
         try {
-          await prisma.order.create({
-            data: orderData,
+          await prisma.$transaction(async (tx) => {
+            await tx.order.create({
+              data: orderData,
+            });
           });
           await redis.del(key);
           channel.ack(msg);
@@ -56,5 +59,6 @@ export default class DataConsumer {
         }
       }
     });
+    
   }
 }

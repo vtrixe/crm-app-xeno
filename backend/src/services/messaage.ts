@@ -40,6 +40,37 @@ export default class MessageSendingService {
     });
   }
 
+  static getRandomDeliveryStatus(): 'SENT' | 'FAILED' {
+    // 90% chance of being 'SENT' and 10% chance of being 'FAILED'
+    return Math.random() < 0.9 ? 'SENT' : 'FAILED';
+  }
+
+  static async getCampaignStats(campaignId: number) {
+    // Count the number of messages by status for the given campaign
+    const stats = await prisma.message.groupBy({
+      by: ['status'],
+      where: {
+        campaignId,
+      },
+      _count: {
+        status: true,
+      },
+    });
+
+    const statsMap: { [key: string]: number } = {
+      SENT: 0,
+      FAILED: 0,
+      PENDING: 0,
+    };
+
+    // Populate the stats map with the counts
+    stats.forEach((stat) => {
+      statsMap[stat.status] = stat._count.status;
+    });
+
+    return statsMap; // Example: { SENT: 120, FAILED: 10, PENDING: 50 }
+  }
+
   static async updateMessageDeliveryStatus(id: number, deliveryStatus: 'SENT' | 'DELIVERED' | 'FAILED') {
     await prisma.message.update({
       where: {

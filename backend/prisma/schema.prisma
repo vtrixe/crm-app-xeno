@@ -1,6 +1,6 @@
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = "mysql://avnadmin:AVNS_uE-mbUEvBvVsBG9d9k1@mysql-38ece33f-gianes-83e9.d.aivencloud.com:12727/defaultdb"
 }
 
 generator client {
@@ -30,7 +30,16 @@ model Role {
   users            UserRole[]
   WhitelistedEmail WhitelistedEmail[]
 }
+model CampaignAudienceSegment {
+  campaignId       Int
+  audienceSegmentId Int
+  campaign         Campaign           @relation(fields: [campaignId], references: [id])
+  audienceSegment  AudienceSegment    @relation(fields: [audienceSegmentId], references: [id])
 
+  @@id([campaignId, audienceSegmentId])  // Composite primary key
+  @@index([campaignId])
+  @@index([audienceSegmentId])
+}
 model UserRole {
   id               Int                @id @default(autoincrement())
   userId           Int
@@ -65,6 +74,7 @@ model Campaign {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
+
   // Relations
   creator          User               @relation("CreatedCampaigns", fields: [createdBy], references: [id])
   updater          User               @relation("UpdatedCampaigns", fields: [updatedBy], references: [id])
@@ -75,6 +85,7 @@ model Campaign {
   @@index([status])
   @@index([createdBy])
   @@index([updatedBy])
+  audienceSegments CampaignAudienceSegment[]
 }
 
 enum CampaignStatus {
@@ -108,10 +119,10 @@ model CampaignStats {
 model CampaignHistory {
   id               Int                @id @default(autoincrement())
   campaignId       Int
-  action           String             // e.g., 'STATUS_CHANGE', 'BUDGET_UPDATE', 'TEMPLATE_UPDATE'
-  oldValue         String             // Previous value before the change
-  newValue         String             // New value after the change
-  updatedBy        Int                // Added to track who made the change
+  action           String             
+  oldValue         String            @db.Text       
+  newValue         String              @db.Text     
+  updatedBy        Int                
   updatedAt        DateTime           @default(now())
   
   campaign         Campaign           @relation(fields: [campaignId], references: [id])
@@ -151,6 +162,7 @@ model AudienceSegment {
   user             User               @relation(fields: [createdBy], references: [id])
 
   @@index([createdBy])
+  campaigns CampaignAudienceSegment[]
 }
 
 model SegmentFilter {
