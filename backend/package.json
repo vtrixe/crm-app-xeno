@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/app.js",
-    "build": "tsc",
+    "start": "node -r tsconfig-paths/register dist/app.js",
+    "build": "tsc && tsc-alias",
     "serve": "node dist/app.js",
     "seed": "ts-node prisma/seed.ts",
     "test": "jest",
