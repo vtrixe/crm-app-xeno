@@ -49,7 +49,7 @@ export default class DataConsumer {
             const createdOrder = await tx.order.create({
               data: orderData,
             });
-
+    
             if (createdOrder.status === 'COMPLETED') {
               await tx.customer.update({
                 where: {
@@ -64,14 +64,21 @@ export default class DataConsumer {
               });
             }
           });
+    
+          // Remove the key from Redis after successful processing
           await redis.del(key);
-          channel.ack(msg);
         } catch (error) {
           console.error('Error processing order data:', error);
-          channel.nack(msg, false, true);
+    
+          // Log additional debugging info if needed
+          console.error('Failed message content:', msg.content.toString());
+        } finally {
+          // Always acknowledge the message
+          channel.ack(msg);
         }
       }
     });
+    
 
     // Update and delete consumers (from previous implementation)
     channel.consume('customer-update-queue', async (msg) => {
