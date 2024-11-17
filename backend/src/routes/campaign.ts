@@ -30,14 +30,14 @@ router.get(
   CampaignController.getCampaign
 );
 
-// Update campaign - Admin and Manager only
+
 router.put(
   '/:id',
   authorize(['Admin', 'Manager']),
   CampaignController.updateCampaign
 );
 
-// Update campaign status - Admin and Manager only
+
 router.patch(
   '/:id/status',
   authorize(['Admin', 'Manager']),

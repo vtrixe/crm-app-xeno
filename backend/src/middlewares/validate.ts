@@ -2,15 +2,22 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 
-const customerSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email()
+export const customerSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number').optional(), // Ensure phone number is valid
+  totalSpending: z.number().min(0, 'Total spending cannot be negative'), // Ensure total spending is non-negative
+  visits: z.number().int().min(0, 'Visits cannot be negative'),
+  lastVisited: z.date().optional(),
+  lastOrderDate: z.date().optional(),
 });
 
-const orderSchema = z.object({
-  customerId: z.number().positive(),
-  amount: z.number().positive(),
-  status: z.string().min(1)
+export const orderSchema = z.object({
+  customerId: z.number().int().min(1, 'Customer ID is required'),
+  amount: z.number().min(0, 'Amount should be a positive number'), // Ensure amount is positive
+  status: z.enum(['PENDING', 'COMPLETED', 'CANCELLED']).refine((val) => ['PENDING', 'COMPLETED', 'CANCELLED'].includes(val), {
+    message: 'Invalid order status',
+  }), 
 });
 
 export const validateCustomer = (req: Request, res: Response, next: NextFunction): void => {

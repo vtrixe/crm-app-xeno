@@ -42,7 +42,8 @@ export default class CampaignService {
   private static async cacheAndPublish(channel: Channel, campaign: Campaign, action: string) {
     const redis = RedisConfig.getClient();
     const key = `campaign:${campaign.id}`;
-    await redis.set(key, JSON.stringify(campaign), { EX: 3600 });
+    await redis.set(key, JSON.stringify(campaign));
+    await redis.expire(key, 3600);
 
     await channel.publish(
       'campaign-exchange',
@@ -212,7 +213,8 @@ export default class CampaignService {
         }
       };
   
-      await redis.set(`campaign:${id}`, JSON.stringify(enrichedCampaign), { EX: 3600 });
+      await redis.set(`campaign:${id}`, JSON.stringify(enrichedCampaign));
+      await redis.expire(`campaign:${id}`, 3600);
       return enrichedCampaign;
   
     } catch (error) {
@@ -319,7 +321,8 @@ export default class CampaignService {
       });
 
       const key = `campaign-stats:${campaignId}:${Date.now()}`;
-      await redis.set(key, JSON.stringify(campaignStats), { EX: 3600 });
+      await redis.set(key, JSON.stringify(campaignStats));
+      await redis.expire(key, 3600);
 
       await channel.publish(
         'campaign-exchange',

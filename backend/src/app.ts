@@ -9,7 +9,7 @@ import passport from './config/googleOauth';
 import routes from './routes/routes';
 import DataConsumer from './consumers/data-ingestion';
 import cors from 'cors';
-import { AudienceSegmentationService } from './services/audience-segmentation';
+
 dotenv.config();
 
 class App {
@@ -35,13 +35,8 @@ class App {
   }
 
   private initializeMiddleware() {
-    this.app.set('trust proxy', 1);
-    this.app.use(cors({
-      origin: "http://localhost:3000",
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    }));
+    this.app.set('trust proxy', 1); 
+    this.app.use(cors());
     this.app.use(express.json());
     this.app.use(
       session({
@@ -49,17 +44,13 @@ class App {
         resave: false,
         saveUninitialized: false,
         cookie: {
-          secure: process.env.NODE_ENV === 'production',  // Only use secure in production
-          httpOnly: true,
-          sameSite: 'lax',
-          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+          secure: false, 
         },
       })
     );
     this.app.use(passport.initialize());
     this.app.use(passport.session());
 }
-
 
 
   private async initializeConnections() {

@@ -110,7 +110,7 @@ export default class CampaignConsumer {
         const { key, data }: CampaignMessage = JSON.parse(msg.content.toString());
 
         // Cache updated campaign data
-        await redis.set(key, JSON.stringify(data), { EX: 3600 });
+        await redis.setex(key, 3600, JSON.stringify(data));
         channel.ack(msg);
       } catch (error) {
         await this.handleError(channel, msg, error);
@@ -133,7 +133,7 @@ export default class CampaignConsumer {
         });
 
         // Cache stats
-        await redis.set(key, JSON.stringify(campaignStats), { EX: 3600 });
+        await redis.setex(key, 3600, JSON.stringify(campaignStats));
         channel.ack(msg);
       } catch (error) {
         await this.handleError(channel, msg, error);
