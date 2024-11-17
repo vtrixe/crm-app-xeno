@@ -68,9 +68,15 @@ export default class DataConsumer {
           // Remove the key from Redis after successful processing
           await redis.del(key);
         } catch (error) {
-          console.error('Error processing order data:', error);
+          if ((error as any).code === 'P2003') {
+            console.error(
+              `Foreign key constraint violation: Unable to find related customer with ID ${data.customerId}`
+            );
+          } else {
+            console.error('Unexpected error processing order data:', error);
+          }
     
-          // Log additional debugging info if needed
+          // Optional: Log failed message details for debugging
           console.error('Failed message content:', msg.content.toString());
         } finally {
           // Always acknowledge the message
@@ -78,6 +84,7 @@ export default class DataConsumer {
         }
       }
     });
+    
     
 
     // Update and delete consumers (from previous implementation)
