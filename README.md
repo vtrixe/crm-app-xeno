@@ -1,4 +1,4 @@
-# Marketing Campaign Management System
+# Mini CRM
 
 ## Table of Contents
 - [Overview](#overview)
