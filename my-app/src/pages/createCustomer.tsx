@@ -24,7 +24,7 @@ const CreateCustomer: React.FC = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/data-ingestion/customers",
+        "https://crm-app-xeno-1.onrender.com/api/data-ingestion/customers",
         customerData,
         { withCredentials: true }
       );

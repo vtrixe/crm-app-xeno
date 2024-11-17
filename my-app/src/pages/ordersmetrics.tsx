@@ -17,7 +17,7 @@ const OrderMetricsPage: React.FC = () => {
 
     try {
       // Fetch the metrics from the backend
-      const response = await axios.get('http://localhost:5000/api/metrics/order', {
+      const response = await axios.get('https://crm-app-xeno-1.onrender.com/api/metrics/order', {
         withCredentials: true,
       });
 
@@ -35,7 +35,7 @@ const OrderMetricsPage: React.FC = () => {
     setError(null);
 
     try {
-      await axios.get('http://localhost:5000/api/data-ingestion/orders/metrics', {
+      await axios.get('https://crm-app-xeno-1.onrender.com/api/data-ingestion/orders/metrics', {
         withCredentials: true,
       });
       alert('Order metrics calculation initiated. Please try fetching after some time.');

@@ -34,7 +34,7 @@ const MessagesListPage = () => {
   });
 
   const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'https://crm-app-xeno-1.onrender.com/api',
     withCredentials: true,
     headers: {
       'Accept': 'application/json',

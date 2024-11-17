@@ -37,7 +37,7 @@ const CreateOrder: React.FC = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/data-ingestion/orders",
+        "https://crm-app-xeno-1.onrender.com/api/data-ingestion/orders",
         payload,
         { withCredentials: true }
       );

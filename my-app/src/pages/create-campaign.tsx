@@ -105,7 +105,7 @@ const CreateCampaignPage: React.FC = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/campaign",
+        "https://crm-app-xeno-1.onrender.com/api/campaign",
         requestData,
         { withCredentials: true }
       );

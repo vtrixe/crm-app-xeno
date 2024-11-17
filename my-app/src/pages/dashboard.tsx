@@ -37,10 +37,11 @@ const Dashboard: React.FC = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
+  
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/dashboard/stats", {
+        const response = await fetch("https://crm-app-xeno-1.onrender.com/api/dashboard/stats", {
           credentials: "include",
         });
         
