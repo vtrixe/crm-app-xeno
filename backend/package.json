@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsc && tsc-alias",
+    "build": "tsc ",
     "start": "node -r tsconfig-paths/register dist/app.js",
     "serve": "node dist/app.js",
     "seed": "ts-node prisma/seed.ts",
