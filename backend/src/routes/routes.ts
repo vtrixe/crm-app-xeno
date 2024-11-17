@@ -29,7 +29,8 @@ router.get(
       maxAge: 24 * 60 * 60 * 1000,
       domain: '.onrender.com'
     });
-    res.redirect('https://crm-app-xeno.vercel.app/dashboard');
+    res.redirect('/dashboard');
+    
   }
 );
 
