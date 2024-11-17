@@ -48,7 +48,7 @@ const OrdersPage: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/data-ingestion/orders?page=${page}&limit=${limit}`,
+        `https://crm-app-xeno-1.onrender.com/api/data-ingestion/orders?page=${page}&limit=${limit}`,
         { withCredentials: true }
       );
 
@@ -66,7 +66,7 @@ const OrdersPage: React.FC = () => {
   const fetchOrderDetails = async (id: number) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/data-ingestion/orders/${id}`,
+        `https://crm-app-xeno-1.onrender.com/api/data-ingestion/orders/${id}`,
         { withCredentials: true }
       );
       setOrderDetails(response.data);
@@ -84,7 +84,7 @@ const OrdersPage: React.FC = () => {
       orderSchema.parse(orderDetails);  // Will throw if invalid
 
       await axios.put(
-        `http://localhost:5000/api/data-ingestion/orders/${id}`,
+        `https://crm-app-xeno-1.onrender.com/api/data-ingestion/orders/${id}`,
         orderDetails,
         { withCredentials: true }
       );
@@ -100,7 +100,7 @@ const OrdersPage: React.FC = () => {
   // Delete order
   const deleteOrder = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:5000/api/data-ingestion/orders/${id}`, {
+      await axios.delete(`https://crm-app-xeno-1.onrender.com/api/data-ingestion/orders/${id}`, {
         withCredentials: true,
       });
       alert("Order deleted successfully");

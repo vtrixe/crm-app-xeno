@@ -29,7 +29,7 @@ const SegmentsPage: React.FC = () => {
 
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/audience-segmentation/segments",
+        "https://crm-app-xeno-1.onrender.com/api/audience-segmentation/segments",
         { withCredentials: true }
       );
       setSegments(response.data);
@@ -47,7 +47,7 @@ const SegmentsPage: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/audience-segmentation/segments/${id}`,
+        `https://crm-app-xeno-1.onrender.com/api/audience-segmentation/segments/${id}`,
         { withCredentials: true }
       );
       setSelectedSegment(response.data);

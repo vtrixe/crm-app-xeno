@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           success: boolean;
           message: string;
           user: User;
-        }>("http://localhost:5000/dashboard", {
+        }>("https://crm-app-xeno-1.onrender.com/dashboard", {
           withCredentials: true,
           headers: {
             'Accept': 'application/json',
@@ -57,13 +57,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = "https://crm-app-xeno-1.onrender.com/auth/google";
   };
 
   const logout = async () => {
     try {
       // Call backend to log the user out
-      await axios.get("http://localhost:5000/logout", { withCredentials: true });
+      await axios.get("https://crm-app-xeno-1.onrender.com/logout", { withCredentials: true });
   
       // After logging out, reset user state and redirect to the login page
       setUser(null);

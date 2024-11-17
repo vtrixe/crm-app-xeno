@@ -40,7 +40,7 @@ const CustomersPage: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/data-ingestion/customers?page=${page}&limit=${limit}`,
+        `https://crm-app-xeno-1.onrender.com/api/data-ingestion/customers?page=${page}&limit=${limit}`,
         { withCredentials: true }
       );
 
@@ -58,7 +58,7 @@ const CustomersPage: React.FC = () => {
   const fetchCustomerDetails = async (id: number) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/data-ingestion/customers/${id}`,
+        `https://crm-app-xeno-1.onrender.com/api/data-ingestion/customers/${id}`,
         { withCredentials: true }
       );
       setCustomerDetails(response.data);
@@ -74,7 +74,7 @@ const CustomersPage: React.FC = () => {
     try {
       const updatedData = { ...customerDetails }; // Use the updated details
       await axios.put(
-        `http://localhost:5000/api/data-ingestion/customers/${id}`,
+        `https://crm-app-xeno-1.onrender.com/api/data-ingestion/customers/${id}`,
         updatedData,
         { withCredentials: true }
       );
@@ -89,7 +89,7 @@ const CustomersPage: React.FC = () => {
   // Delete customer
   const deleteCustomer = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:5000/api/data-ingestion/customers/${id}`, {
+      await axios.delete(`https://crm-app-xeno-1.onrender.com/api/data-ingestion/customers/${id}`, {
         withCredentials: true,
       });
       alert("Customer deleted successfully");

@@ -17,7 +17,7 @@ const CustomerMetricsPage: React.FC = () => {
 
     try {
       // Fetch the metrics from the backend
-      const response = await axios.get('http://localhost:5000/api/metrics/customer', {
+      const response = await axios.get('https://crm-app-xeno-1.onrender.com/api/metrics/customer', {
         withCredentials: true,
       });
 
@@ -36,7 +36,7 @@ const CustomerMetricsPage: React.FC = () => {
 
     try {
 
-      await axios.get('http://localhost:5000/api/data-ingestion/customers/metrics', {
+      await axios.get('https://crm-app-xeno-1.onrender.com/api/data-ingestion/customers/metrics', {
         withCredentials: true,
       });
       alert('Customer metrics calculation initiated. Please try fetching after some time.');

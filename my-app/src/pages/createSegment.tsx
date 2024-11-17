@@ -54,7 +54,7 @@ const CreateSegmentPage: React.FC = () => {
     };
 
     try {
-      await axios.post("http://localhost:5000/api/audience-segmentation/segments", data, {
+      await axios.post("https://crm-app-xeno-1.onrender.com/api/audience-segmentation/segments", data, {
         withCredentials: true,
       });
       setSuccessMessage("Segment created successfully!");

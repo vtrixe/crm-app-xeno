@@ -8,7 +8,7 @@ const Login: React.FC = () => {
     // Check if the user is already logged in and redirect them
     const checkAuth = async () => {
       try {
-        const response = await fetch("http://localhost:5000/dashboard", { credentials: "include" });
+        const response = await fetch("https://crm-app-xeno-1.onrender.com/dashboard", { credentials: "include" });
         if (response.ok) {
           window.location.href = "/dashboard";
         }
