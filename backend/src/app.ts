@@ -36,7 +36,10 @@ class App {
 
   private initializeMiddleware() {
     this.app.set('trust proxy', 1); 
-    this.app.use(cors());
+    this.app.use(cors({
+      origin: true,  // Allows all origins
+    credentials: true,  // Allows cookies to be sent with requests
+    }));
     this.app.use(express.json());
     this.app.use(
       session({
@@ -44,7 +47,9 @@ class App {
         resave: false,
         saveUninitialized: false,
         cookie: {
-          secure: false, 
+          secure: false,  // Allow cookies in both HTTP and HTTPS environments
+          httpOnly: true,  // Prevent cookies from being accessed via JavaScript
+          sameSite: 'none',  // Allow cross-site cookies
         },
       })
     );
