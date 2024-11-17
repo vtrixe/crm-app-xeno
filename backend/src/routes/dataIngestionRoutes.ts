@@ -22,7 +22,6 @@ router.post(
   DataIngestionController.ingestOrder
 );
 
-// New Customer routes
 router.get(
   '/customers',
   authorize(['Admin', 'Manager', 'Viewer']),

@@ -1,4 +1,7 @@
 import amqp, { Connection, Channel } from 'amqplib';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class RabbitMQConfig {
   private static connection: Connection;
@@ -6,7 +9,7 @@ class RabbitMQConfig {
 
   public static async getConnection(): Promise<Connection> {
     if (!this.connection) {
-      const url = `amqp://${process.env.RABBITMQ_DEFAULT_USER || 'user'}:${process.env.RABBITMQ_DEFAULT_PASS || 'password'}@${process.env.RABBITMQ_HOST || 'localhost'}:${process.env.RABBITMQ_PORT || '5672'}`;
+      const url = `amqps://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@${process.env.RABBITMQ_HOST}/${process.env.RABBITMQ_VHOST}`;
       this.connection = await amqp.connect(url);
     }
     return this.connection;
@@ -17,19 +20,25 @@ class RabbitMQConfig {
       const connection = await this.getConnection();
       this.channel = await connection.createChannel();
 
-      // Define all exchanges first
+      // Declare all exchanges first
       const exchanges = [
         { name: 'data-ingestion', type: 'direct' },
         { name: 'campaign-exchange', type: 'direct' },
         { name: 'message-exchange', type: 'direct' },
-        { name: 'metrics-exchange', type: 'direct' }  // New exchange for metrics
+        { name: 'metrics-exchange', type: 'direct' },  // New exchange for metrics
       ];
 
       // Assert all exchanges
       for (const exchange of exchanges) {
-        await this.channel.assertExchange(exchange.name, exchange.type, { durable: true });
+        try {
+          await this.channel.assertExchange(exchange.name, exchange.type, { durable: true });
+          console.log(`Exchange declared: ${exchange.name}`);
+        } catch (error) {
+          console.error(`Error declaring exchange ${exchange.name}:`, error);
+        }
       }
 
+      // Declare and bind all queues to their respective exchanges
       const queues = [
         { name: 'customer-queue', exchange: 'data-ingestion', routingKey: 'customer' },
         { name: 'order-queue', exchange: 'data-ingestion', routingKey: 'order' },
@@ -44,11 +53,20 @@ class RabbitMQConfig {
         { name: 'order-metrics-queue', exchange: 'metrics-exchange', routingKey: 'order.metrics' }
       ];
 
-      // Assert all queues and bind them to their exchanges
+      // Assert and declare queues
       for (const queue of queues) {
-        await this.channel.assertQueue(queue.name, { durable: true });
-        if (queue.exchange && queue.routingKey) {
-          await this.channel.bindQueue(queue.name, queue.exchange, queue.routingKey);
+        try {
+          // Explicitly declare the queue
+          const declaredQueue = await this.channel.assertQueue(queue.name, { durable: true });
+          console.log(`Queue declared: ${queue.name}`);
+
+          // Bind the queue to the exchange with routing key
+          if (queue.exchange && queue.routingKey) {
+            await this.channel.bindQueue(queue.name, queue.exchange, queue.routingKey);
+            console.log(`Queue ${queue.name} bound to exchange ${queue.exchange} with routing key ${queue.routingKey}`);
+          }
+        } catch (error) {
+          console.error(`Error declaring or binding queue ${queue.name}:`, error);
         }
       }
     }

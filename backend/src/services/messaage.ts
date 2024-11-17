@@ -19,7 +19,7 @@ export default class MessageSendingService {
 
     // Publish message to Redis
     const redisKey = `message:${Date.now()}`;
-    await redis.set(redisKey, JSON.stringify(messageData), { EX: 3600 });
+    await redis.setex(redisKey, 3600, JSON.stringify(messageData));
 
     // Publish message to RabbitMQ
     await channel.publish(

@@ -94,18 +94,41 @@ export default class DataConsumer {
         }
       }
     });
-
     channel.consume('customer-delete-queue', async (msg) => {
       if (msg) {
         const { id } = JSON.parse(msg.content.toString());
+    
         try {
+          // Check if the customer exists before deleting
+          const customer = await prisma.customer.findUnique({
+            where: { id },
+          });
+    
+          if (!customer) {
+            console.log(`Customer with id ${id} does not exist. Acknowledging message.`);
+            channel.ack(msg); // Acknowledge message even if the customer does not exist
+            return; // Exit early if customer does not exist
+          }
+    
+          // Proceed with deletion if customer exists
           await prisma.customer.delete({
             where: { id },
           });
-          channel.ack(msg);
+    
+          console.log(`Customer with id ${id} deleted successfully.`);
+          channel.ack(msg); // Acknowledge the message after successful deletion
+    
         } catch (error) {
           console.error('Error deleting customer:', error);
-          channel.nack(msg, false, true);
+    
+          // Handle specific Prisma error codes
+          if ((error as any).code === 'P2025') {
+            console.log(`Customer with id ${id} not found. Skipping deletion.`);
+            channel.ack(msg); // Acknowledge the message even if the customer is not found
+          } else {
+            // Nack message to requeue it for retry
+            channel.nack(msg, false, true); 
+          }
         }
       }
     });
@@ -214,7 +237,7 @@ export default class DataConsumer {
             };
           });
 
-          await redis.set('customer:metrics', JSON.stringify(metrics), { EX: 3600 });
+          await redis.setex('customer:metrics', 3600, JSON.stringify(metrics));
           channel.ack(msg);
         } catch (error) {
           console.error('Error calculating customer metrics:', error);
@@ -267,7 +290,7 @@ export default class DataConsumer {
             };
           });
 
-          await redis.set('order:metrics', JSON.stringify(metrics), { EX: 3600 });
+          await redis.setex('order:metrics', 3600, JSON.stringify(metrics));
           channel.ack(msg);
         } catch (error) {
           console.error('Error calculating order metrics:', error);

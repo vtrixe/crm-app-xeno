@@ -44,7 +44,7 @@ export class CustomerService {
     const channel = await RabbitMQConfig.getChannel();
     
     const key = `customer-update:${Date.now()}`;
-    await redis.set(key, JSON.stringify(customerData), { EX: 3600 });
+    await redis.setex(key, 3600, JSON.stringify(customerData));
     
     await channel.publish(
       'data-ingestion',  // Changed from 'data-processing' to 'data-ingestion'
@@ -52,13 +52,29 @@ export class CustomerService {
       Buffer.from(JSON.stringify({ key, data: customerData }))
     );
   }
-  
   static async publishCustomerDeletion(customerId: number) {
-    const channel = await RabbitMQConfig.getChannel();
-    await channel.publish(
-      'data-ingestion',  // Changed from 'data-processing' to 'data-ingestion'
-      'customer.delete',
-      Buffer.from(JSON.stringify({ id: customerId }))
-    );
+    try {
+      // Check if the customer exists in the database
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId },
+      });
+
+      if (!customer) {
+        console.log(`Customer with id ${customerId} does not exist. Skipping publishing deletion.`);
+        return; // Skip the publishing if the customer doesn't exist
+      }
+
+      // If customer exists, proceed to publish the message to RabbitMQ
+      const channel = await RabbitMQConfig.getChannel();
+      await channel.publish(
+        'data-ingestion',  // Changed from 'data-processing' to 'data-ingestion'
+        'customer.delete',
+        Buffer.from(JSON.stringify({ id: customerId }))
+      );
+
+      console.log(`Deletion message for customer ${customerId} published successfully.`);
+    } catch (error) {
+      console.error('Error publishing customer deletion:', error);
+    }
   }
 }

@@ -45,7 +45,7 @@ export class OrderService {
       const channel = await RabbitMQConfig.getChannel();
       
       const key = `order-update:${Date.now()}`;
-      await redis.set(key, JSON.stringify(orderData), { EX: 3600 });
+      await redis.setex(key, 3600, JSON.stringify(orderData));
       
       await channel.publish(
         'data-ingestion',  // Changed from 'data-processing' to 'data-ingestion'

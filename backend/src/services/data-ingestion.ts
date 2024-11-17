@@ -10,7 +10,7 @@ export default class DataIngestionService {
     const channel = await RabbitMQConfig.getChannel();
     
     const key = `customer:${Date.now()}`;
-    await redis.set(key, JSON.stringify(customerData), { EX: 3600 });
+    await redis.setex(key, 3600, JSON.stringify(customerData));
     
     await channel.publish(
       'data-ingestion',
@@ -24,7 +24,7 @@ export default class DataIngestionService {
     const channel = await RabbitMQConfig.getChannel();
     
     const key = `order:${Date.now()}`;
-    await redis.set(key, JSON.stringify(orderData), { EX: 3600 });
+    await redis.setex(key, 3600, JSON.stringify(orderData));
     
     await channel.publish(
       'data-ingestion',

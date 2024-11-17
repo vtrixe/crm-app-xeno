@@ -1,9 +1,8 @@
 import { PrismaClient } from '@prisma/client';
-import { Redis } from 'ioredis';
 import { Channel } from 'amqplib';
 import { z } from 'zod';
 import { RedisClientType, RedisFunctions, RedisModules, RedisScripts } from 'redis';
-
+import { Redis } from 'ioredis'; 
 export const filterSchema = z.object({
   field: z.enum(['totalSpending', 'visits', 'lastVisited']),
   operator: z.enum(['>', '<', '>=', '<=', '=']),
@@ -19,7 +18,7 @@ export const segmentSchema = z.object({
 export class AudienceSegmentationService {
   constructor(
     private prisma: PrismaClient,
-    private redis: RedisClientType<RedisModules, RedisFunctions, RedisScripts>,
+    private redis: Redis,
     private channel: Channel
   ) {}
 
@@ -99,7 +98,7 @@ export class AudienceSegmentationService {
       include: { filters: true }
     });
 
-    await this.redis.setEx('all-segments', 300, JSON.stringify(segments));
+    await this.redis.setex('all-segments', 300, JSON.stringify(segments));
     return segments;
   }
 
@@ -113,7 +112,7 @@ export class AudienceSegmentationService {
     });
 
     if (segment) {
-      await this.redis.setEx(`segment:${id}`, 300, JSON.stringify(segment));
+      await this.redis.setex(`segment:${id}`, 300, JSON.stringify(segment));
     }
 
     return segment;

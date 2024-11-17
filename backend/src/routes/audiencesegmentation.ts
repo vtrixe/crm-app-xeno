@@ -6,11 +6,12 @@ import RedisConfig from '../config/redis';
 import AudienceSegmentationQueue from '@/workers/audience-segment';
 import { AuthRequest } from '@/types/segment';
 import { AudienceSegmentController } from '@/controllers/audience-segmentation';
-
+import { Redis } from 'ioredis'; 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 async function initializeController() {
+  
   const channel = await AudienceSegmentationQueue.setupQueues();
   const redis = await RedisConfig.connect();
   const controller = new AudienceSegmentController(
