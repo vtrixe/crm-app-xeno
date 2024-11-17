@@ -22,5 +22,12 @@ router.get(
   MessageController.getCampaignStats
 );
 
+router.get(
+  '/list',
+  authorize(['Admin', 'Manager']),
+  MessageController.listMessages
+);
+
+
 
 export default router;

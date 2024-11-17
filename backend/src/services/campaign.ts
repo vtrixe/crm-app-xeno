@@ -131,16 +131,14 @@ export default class CampaignService {
       }
       throw error;
     }
-  }  static async getCampaign(id: number) {
+  }  
+  
+  static async getCampaign(id: number) {
     try {
       const redis = RedisConfig.getClient();
       
-      // Try cache first
-      const cached = await redis.get(`campaign:${id}`);
-      if (cached) {
-        return JSON.parse(cached);
-      }
-
+  
+  
       const campaign = await prisma.campaign.findUnique({
         where: { id },
         include: {
@@ -160,6 +158,13 @@ export default class CampaignService {
               email: true
             }
           },
+          updater: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
           messages: {
             select: {
               id: true,
@@ -167,17 +172,49 @@ export default class CampaignService {
               sentAt: true,
               deliveredAt: true
             }
+          },
+          history: {
+            orderBy: {
+              updatedAt: 'desc'
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            }
           }
         }
       });
-
+  
       if (!campaign) {
         throw new CampaignError('Campaign not found');
       }
-
-      await redis.set(`campaign:${id}`, JSON.stringify(campaign), { EX: 3600 });
-      return campaign;
-
+  
+      const enrichedCampaign = {
+        ...campaign,
+        statusDetails: {
+          current: campaign.status,
+          isActive: campaign.status === 'ACTIVE',
+          canActivate: campaign.status === 'DRAFT' || campaign.status === 'PAUSED',
+          canPause: campaign.status === 'ACTIVE',
+          canComplete: ['ACTIVE', 'PAUSED'].includes(campaign.status)
+        },
+        historyAnalytics: {
+          totalUpdates: campaign.history.length,
+          lastUpdate: campaign.history[0]?.updatedAt || campaign.createdAt,
+          statusChanges: campaign.history.filter(h => 
+            JSON.parse(h.oldValue).status !== JSON.parse(h.newValue).status
+          ).length
+        }
+      };
+  
+      await redis.set(`campaign:${id}`, JSON.stringify(enrichedCampaign), { EX: 3600 });
+      return enrichedCampaign;
+  
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         throw new CampaignError(`Database error: ${error.message}`);
@@ -196,6 +233,24 @@ export default class CampaignService {
         throw new CampaignError('Campaign not found');
       }
 
+      // Prepare audience segments update if provided
+      let audienceSegmentsUpdate = {};
+      if (updateData.audienceSegmentIds) {
+        // Delete existing connections
+        await prisma.campaignAudienceSegment.deleteMany({
+          where: { campaignId: id }
+        });
+
+        // Create new connections
+        audienceSegmentsUpdate = {
+          create: updateData.audienceSegmentIds.map(audienceSegmentId => ({
+            audienceSegment: {
+              connect: { id: audienceSegmentId }
+            }
+          }))
+        };
+      }
+
       const campaign = await prisma.campaign.update({
         where: { id },
         data: {
@@ -206,11 +261,31 @@ export default class CampaignService {
           ...(updateData.targetAudience && { targetAudience: updateData.targetAudience }),
           ...(updateData.messageTemplate && { messageTemplate: updateData.messageTemplate }),
           ...(updateData.status && { status: updateData.status }),
-          updatedBy: userId
+          updatedBy: userId,
+          audienceSegments: audienceSegmentsUpdate
+        },
+        include: {
+          audienceSegments: {
+            include: {
+              audienceSegment: true
+            }
+          },
+          stats: {
+            orderBy: { createdAt: 'desc' },
+            take: 1
+          }
         }
       });
 
       await this.cacheAndPublish(channel, campaign, 'update');
+
+      await this.updateCampaignHistory(
+        id,
+        'UPDATE',
+        JSON.stringify(existingCampaign),
+        JSON.stringify(campaign),
+        userId
+      );
 
       // Create history entry
       await this.updateCampaignHistory(
@@ -219,7 +294,7 @@ export default class CampaignService {
         JSON.stringify(existingCampaign),
         JSON.stringify(campaign),
         userId
-      );
+    );
 
       return campaign;
 
@@ -230,7 +305,6 @@ export default class CampaignService {
       throw error;
     }
   }
-
 
   static async updateCampaignStats(campaignId: number, stats: CampaignStatsDTO) {
     try {
@@ -398,6 +472,36 @@ export default class CampaignService {
                 name: true,
                 email: true
               }
+            },
+            updater: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            },
+            messages: {
+              select: {
+                id: true,
+                status: true,
+                sentAt: true,
+                deliveredAt: true
+              }
+            },
+            history: {
+              orderBy: {
+                updatedAt: 'desc'
+              },
+              take: 10, // Limit history to most recent 10 entries for list view
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true
+                  }
+                }
+              }
             }
           },
           orderBy: {
@@ -407,8 +511,32 @@ export default class CampaignService {
         prisma.campaign.count({ where })
       ]);
 
+      const enrichedCampaigns = campaigns.map(campaign => ({
+        ...campaign,
+        statusDetails: {
+          current: campaign.status,
+          isActive: campaign.status === 'ACTIVE',
+          canActivate: campaign.status === 'DRAFT' || campaign.status === 'PAUSED',
+          canPause: campaign.status === 'ACTIVE',
+          canComplete: ['ACTIVE', 'PAUSED'].includes(campaign.status)
+        },
+        historyAnalytics: {
+          totalUpdates: campaign.history.length,
+          lastUpdate: campaign.history[0]?.updatedAt || campaign.createdAt,
+          statusChanges: campaign.history.filter(h => {
+            try {
+              const oldValue = JSON.parse(h.oldValue);
+              const newValue = JSON.parse(h.newValue);
+              return oldValue.status !== newValue.status;
+            } catch {
+              return false;
+            }
+          }).length
+        }
+      }));
+
       return {
-        data: campaigns,
+        data: enrichedCampaigns,
         pagination: {
           page,
           limit,

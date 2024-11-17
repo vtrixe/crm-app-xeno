@@ -35,13 +35,13 @@ class App {
   }
 
   private initializeMiddleware() {
-    this.app.set('trust proxy', 1); 
-    this.app.use(cors(
-      {
-        origin: "http://localhost:3000", // Frontend origin
-        credentials: true, // Allow cookies
-      }
-    ));
+    this.app.set('trust proxy', 1);
+    this.app.use(cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    }));
     this.app.use(express.json());
     this.app.use(
       session({
@@ -49,13 +49,17 @@ class App {
         resave: false,
         saveUninitialized: false,
         cookie: {
-          secure: false, 
+          secure: process.env.NODE_ENV === 'production',  // Only use secure in production
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
         },
       })
     );
     this.app.use(passport.initialize());
     this.app.use(passport.session());
 }
+
 
 
   private async initializeConnections() {

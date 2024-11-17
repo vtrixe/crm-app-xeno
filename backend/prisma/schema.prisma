@@ -1,6 +1,6 @@
 datasource db {
   provider = "mysql"
-  url      = "mysql://avnadmin:AVNS_uE-mbUEvBvVsBG9d9k1@mysql-38ece33f-gianes-83e9.d.aivencloud.com:12727/defaultdb"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -67,7 +67,7 @@ model Campaign {
   endDate          DateTime
   budget           Float
   targetAudience   String
-  messageTemplate  String             // Added field for message content
+  messageTemplate  String             @db.Text
   status           CampaignStatus     @default(DRAFT)
   createdBy        Int              
   updatedBy        Int              
@@ -194,11 +194,11 @@ model Message {
   id               Int                @id @default(autoincrement())
   campaignId       Int                // Links the message to a campaign
   customerId       Int                // Links the message to the customer
-  content          String             // The actual message content sent to the customer
+  content          String             @db.Text
   status           MessageStatus      @default(PENDING) // Tracks delivery status
   sentAt           DateTime?          // Timestamp when the message was sent
   deliveredAt      DateTime?          // Timestamp when the message was delivered
-  deliveryReceipt  String?            // Optional field to store additional metadata from the provider
+  deliveryReceipt  String?            @db.Text
   createdAt        DateTime           @default(now())
 
   campaign         Campaign           @relation(fields: [campaignId], references: [id])
