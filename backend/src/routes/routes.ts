@@ -21,9 +21,27 @@ router.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
-    res.redirect('https://crm-app-xeno.vercel.app/dashboard'); 
+    // Set a cookie to indicate authentication status
+    res.cookie('isAuthenticated', 'true', {
+      secure: true,
+      sameSite: 'none',
+      httpOnly: false,
+      maxAge: 24 * 60 * 60 * 1000,
+      domain: '.onrender.com'
+    });
+    res.redirect('https://crm-app-xeno.vercel.app/dashboard');
   }
 );
+
+
+router.get('/check-auth', (req, res) => {
+  if (req.isAuthenticated() && req.user) {
+    res.json({ isAuthenticated: true, user: req.user });
+  } else {
+    res.json({ isAuthenticated: false });
+  }
+});
+
 
 router.get('/dashboard', (req, res) => {
   if (req.isAuthenticated() && req.user) {
