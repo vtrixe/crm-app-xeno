@@ -3,6 +3,8 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+const FRONTEND_URL = 'https://crm-app-xeno.vercel.app';
+const BACKEND_URL = 'https://crm-app-xeno-1.onrender.com';
 
 declare global {
   namespace Express {
@@ -21,7 +23,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: 'https://crm-app-xeno-1.onrender.com/auth/google/callback',
+      callbackURL: `${BACKEND_URL}/auth/google/callback`,
+      proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -30,24 +33,22 @@ passport.use(
           return done(new Error('No email found'));
         }
 
-        
         let user = await prisma.user.findUnique({
           where: { googleId: profile.id },
+          include: {
+            UserRole: {
+              include: {
+                Role: true
+              }
+            }
+          }
         });
 
         if (!user) {
-     
           const whitelisted = await prisma.whitelistedEmail.findUnique({
             where: { email },
           });
-          const roleId = whitelisted ? whitelisted.roleId : 1; // Default role (ensure this role exists in DB)
-
-         
-          const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
-          if (!roleExists) {
-            throw new Error(`Role with ID ${roleId} does not exist.`);
-          }
-
+          const roleId = whitelisted ? whitelisted.roleId : 1;
 
           user = await prisma.user.create({
             data: {
@@ -55,39 +56,50 @@ passport.use(
               email,
               name: profile.displayName,
               createdAt: new Date(),
+              UserRole: {
+                create: {
+                  roleId: roleId
+                }
+              }
             },
-          });
-
- 
-          await prisma.userRole.create({
-            data: {
-              userId: user.id,
-              roleId: roleId,
-            },
+            include: {
+              UserRole: {
+                include: {
+                  Role: true
+                }
+              }
+            }
           });
         }
 
         return done(null, user);
       } catch (error) {
+        console.error('Google Strategy Error:', error);
         return done(error);
       }
     }
   )
 );
 
-passport.serializeUser((user, done) => {
+passport.serializeUser((user: Express.User, done) => {
   done(null, user.id);
 });
 
 passport.deserializeUser(async (id: number, done) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: Number(id) } });
-    if (!user) {
-      return done(new Error('User not found'));
-    }
-    return done(null, user);
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) },
+      include: {
+        UserRole: {
+          include: {
+            Role: true
+          }
+        }
+      }
+    });
+    done(null, user);
   } catch (error) {
-    return done(error);
+    done(error);
   }
 });
 

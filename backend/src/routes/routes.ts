@@ -15,59 +15,43 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Auth routes
-router.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
+
+const FRONTEND_URL = 'https://crm-app-xeno.vercel.app';
+
+router.get('/auth/google', 
+  passport.authenticate('google', { 
+    scope: ['email', 'profile'],
+    prompt: 'select_account'
+  })
+);
 
 router.get(
   '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
+  passport.authenticate('google', { failureRedirect: `${FRONTEND_URL}/login` }),
   (req, res) => {
-    // Set a cookie to indicate authentication status
-    res.cookie('isAuthenticated', 'true', {
-      secure: true,
-      sameSite: 'none',
-      httpOnly: false,
-      maxAge: 24 * 60 * 60 * 1000,
-      domain: '.onrender.com'
-    });
-    res.redirect('/dashboard');
-    
+    res.redirect(`${FRONTEND_URL}/dashboard`);
   }
 );
 
-
-router.get('/check-auth', (req, res) => {
-  if (req.isAuthenticated() && req.user) {
-    res.json({ isAuthenticated: true, user: req.user });
-  } else {
-    res.json({ isAuthenticated: false });
-  }
-});
-
-
 router.get('/dashboard', (req, res) => {
   if (req.isAuthenticated() && req.user) {
-    prisma.userRole.findMany({
-      where: { 
-        userId: req.user.id 
+    const user = req.user as Express.User & {
+      UserRole?: Array<{ Role: { id: number; roleName: string } }>;
+    };
+
+    res.json({
+      success: true,
+      message: 'You have successfully logged in!',
+      user: {
+        id: user.id,
+        googleId: user.googleId,
+        email: user.email,
+        name: user.name,
+        roles: user.UserRole?.map(ur => ({
+          id: ur.Role.id,
+          name: ur.Role.roleName
+        })) || []
       },
-      include: {
-        Role: true
-      }
-    }).then(userRoles => {
-      res.json({
-        success: true,
-        message: 'You have successfully logged in!',
-        user: {
-          id: req.user.id,
-          googleId: req.user.googleId,
-          email: req.user.email,
-          name: req.user.name,
-          roles: userRoles.map(ur => ({
-            id: ur.roleId,
-            name: ur.Role.roleName
-          }))
-        },
-      });
     });
   } else {
     res.status(401).json({ 
@@ -85,8 +69,13 @@ router.get('/logout', (req, res) => {
         message: 'Failed to logout',
       });
     }
-    res.clearCookie("connect.sid"); // Clear the session cookie if using session-based auth
-    res.status(200).json({ success: true, message: 'Logged out successfully' });
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+      }
+      res.clearCookie('connect.sid');
+      res.status(200).json({ success: true, message: 'Logged out successfully' });
+    });
   });
 });
 
