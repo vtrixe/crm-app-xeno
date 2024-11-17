@@ -5,11 +5,12 @@
   "scripts": {
     "start": "ts-node -r tsconfig-paths/register src/app.ts",
     "build": "tsc",
-    "serve": "node dist/server.js",
+    "serve": "node dist/app.js",
     "seed": "ts-node prisma/seed.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "clean": "rm -rf dist"
   },
   "keywords": [],
   "author": "",
@@ -39,6 +40,7 @@
     "@types/express": "^5.0.0",
     "@types/express-rate-limit": "^6.0.2",
     "@types/express-session": "^1.18.0",
+    "@types/ioredis": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.9.0",
     "@types/passport": "^1.0.17",
