@@ -99,35 +99,28 @@ export default class DataConsumer {
         const { id } = JSON.parse(msg.content.toString());
     
         try {
-          // Check if the customer exists before deleting
-          const customer = await prisma.customer.findUnique({
-            where: { id },
-          });
-    
-          if (!customer) {
-            console.log(`Customer with id ${id} does not exist. Acknowledging message.`);
-            channel.ack(msg); // Acknowledge message even if the customer does not exist
-            return; // Exit early if customer does not exist
-          }
-    
-          // Proceed with deletion if customer exists
+          const id = msg.content.toString();
+          
           await prisma.customer.delete({
-            where: { id },
+            where: { id: Number(id) },
           });
-    
-          console.log(`Customer with id ${id} deleted successfully.`);
-          channel.ack(msg); // Acknowledge the message after successful deletion
-    
+        
+          console.log(`Customer with id ${id} deleted successfully`);
+          channel.ack(msg);
         } catch (error) {
           console.error('Error deleting customer:', error);
-    
+        
           // Handle specific Prisma error codes
           if ((error as any).code === 'P2025') {
             console.log(`Customer with id ${id} not found. Skipping deletion.`);
-            channel.ack(msg); // Acknowledge the message even if the customer is not found
+            channel.ack(msg); // Acknowledge and continue
+          } else if ((error as any).code === 'P2003') {
+            console.log(`Foreign key constraint error for customer ${id}. Acknowledging message.`);
+            channel.ack(msg); // Acknowledge instead of requeuing
+            // Optionally, you could log this to a separate system for manual review
           } else {
-            // Nack message to requeue it for retry
-            channel.nack(msg, false, true); 
+            console.log('Acknowledging message due to error');
+            channel.ack(msg); // Acknowledge instead of requeuing
           }
         }
       }

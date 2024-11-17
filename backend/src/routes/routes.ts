@@ -35,23 +35,28 @@ router.get(
 
 router.get('/dashboard', (req, res) => {
   if (req.isAuthenticated() && req.user) {
-    const user = req.user as Express.User & {
-      UserRole?: Array<{ Role: { id: number; roleName: string } }>;
-    };
-
-    res.json({
-      success: true,
-      message: 'You have successfully logged in!',
-      user: {
-        id: user.id,
-        googleId: user.googleId,
-        email: user.email,
-        name: user.name,
-        roles: user.UserRole?.map(ur => ({
-          id: ur.Role.id,
-          name: ur.Role.roleName
-        })) || []
+    prisma.userRole.findMany({
+      where: { 
+        userId: req.user.id 
       },
+      include: {
+        Role: true
+      }
+    }).then(userRoles => {
+      res.json({
+        success: true,
+        message: 'You have successfully logged in!',
+        user: {
+          id: req.user.id,
+          googleId: req.user.googleId,
+          email: req.user.email,
+          name: req.user.name,
+          roles: userRoles.map(ur => ({
+            id: ur.roleId,
+            name: ur.Role.roleName
+          }))
+        },
+      });
     });
   } else {
     res.status(401).json({ 
@@ -60,6 +65,7 @@ router.get('/dashboard', (req, res) => {
     });
   }
 });
+
 
 router.get('/logout', (req, res) => {
   req.logout((err) => {
