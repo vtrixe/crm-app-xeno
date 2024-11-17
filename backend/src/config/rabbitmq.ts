@@ -16,26 +16,41 @@ class RabbitMQConfig {
     if (!this.channel) {
       const connection = await this.getConnection();
       this.channel = await connection.createChannel();
-      
- 
-      await this.channel.assertExchange('data-ingestion', 'direct', { durable: true });
-      await this.channel.assertQueue('customer-queue', { durable: true });
-      await this.channel.assertQueue('order-queue', { durable: true });
-      
-      await this.channel.bindQueue('customer-queue', 'data-ingestion', 'customer');
-      await this.channel.bindQueue('order-queue', 'data-ingestion', 'order');
 
-      await this.channel.assertExchange('campaign-exchange', 'direct', { durable: true });
-      await this.channel.assertQueue('campaign-creation-queue', { durable: true });
-      await this.channel.assertQueue('campaign-stats-queue', { durable: true });
-      
-      await this.channel.bindQueue('campaign-creation-queue', 'campaign-exchange', 'campaign.create');
-      await this.channel.bindQueue('campaign-stats-queue', 'campaign-exchange', 'campaign.stats');
+      // Define all exchanges first
+      const exchanges = [
+        { name: 'data-ingestion', type: 'direct' },
+        { name: 'campaign-exchange', type: 'direct' },
+        { name: 'message-exchange', type: 'direct' },
+        { name: 'metrics-exchange', type: 'direct' }  // New exchange for metrics
+      ];
 
-      await this.channel.assertExchange('message-exchange', 'direct', { durable: true });
-      await this.channel.assertQueue('message-queue', { durable: true });
-      await this.channel.bindQueue('message-queue', 'message-exchange', 'message.send');
+      // Assert all exchanges
+      for (const exchange of exchanges) {
+        await this.channel.assertExchange(exchange.name, exchange.type, { durable: true });
+      }
 
+      const queues = [
+        { name: 'customer-queue', exchange: 'data-ingestion', routingKey: 'customer' },
+        { name: 'order-queue', exchange: 'data-ingestion', routingKey: 'order' },
+        { name: 'customer-update-queue', exchange: 'data-ingestion', routingKey: 'customer.update' },
+        { name: 'customer-delete-queue', exchange: 'data-ingestion', routingKey: 'customer.delete' },
+        { name: 'order-update-queue', exchange: 'data-ingestion', routingKey: 'order.update' },
+        { name: 'order-delete-queue', exchange: 'data-ingestion', routingKey: 'order.delete' },
+        { name: 'campaign-creation-queue', exchange: 'campaign-exchange', routingKey: 'campaign.create' },
+        { name: 'campaign-stats-queue', exchange: 'campaign-exchange', routingKey: 'campaign.stats' },
+        { name: 'message-queue', exchange: 'message-exchange', routingKey: 'message.send' },
+        { name: 'customer-metrics-queue', exchange: 'metrics-exchange', routingKey: 'customer.metrics' },
+        { name: 'order-metrics-queue', exchange: 'metrics-exchange', routingKey: 'order.metrics' }
+      ];
+
+      // Assert all queues and bind them to their exchanges
+      for (const queue of queues) {
+        await this.channel.assertQueue(queue.name, { durable: true });
+        if (queue.exchange && queue.routingKey) {
+          await this.channel.bindQueue(queue.name, queue.exchange, queue.routingKey);
+        }
+      }
     }
     return this.channel;
   }

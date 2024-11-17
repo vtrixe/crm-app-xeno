@@ -57,6 +57,13 @@ async function initializeController() {
     controller.getSegmentById.bind(controller)
   );
 
+  router.post(
+    "/segments/:id/validate-size",
+    authorize(["admin", "manager"]),
+    handleRequest(controller.validateSegmentSize.bind(controller))
+  );
+  
+
   return router;
 }
 

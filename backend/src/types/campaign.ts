@@ -5,4 +5,5 @@ export interface CreateCampaignDTO {
     budget: number;
     targetAudience: string;
     messageTemplate: string;
+    audienceSegmentIds: number[];
   }

@@ -1,7 +1,10 @@
 import express from 'express';
 import CampaignController from '../controllers/campaign';
 import authorize from '../middlewares/rbac';
-import { validateCampaign, validateCampaignStats } from '../middlewares/validate';
+import { 
+  validateCampaign, 
+  validateCampaignStats, 
+} from '../middlewares/validate';
 
 const router = express.Router();
 
@@ -13,11 +16,32 @@ router.post(
   CampaignController.createCampaign
 );
 
-// Get campaign - All authenticated users with appropriate roles
+// List campaigns - All authenticated users
+router.get(
+  '/',
+  authorize(['Admin', 'Manager', 'Analyst', 'Viewer']),
+  CampaignController.listCampaigns
+);
+
+// Get specific campaign - All authenticated users
 router.get(
   '/:id',
   authorize(['Admin', 'Manager', 'Analyst', 'Viewer']),
   CampaignController.getCampaign
+);
+
+// Update campaign - Admin and Manager only
+router.put(
+  '/:id',
+  authorize(['Admin', 'Manager']),
+  CampaignController.updateCampaign
+);
+
+// Update campaign status - Admin and Manager only
+router.patch(
+  '/:id/status',
+  authorize(['Admin', 'Manager']),
+  CampaignController.updateCampaign
 );
 
 // Update campaign stats - Admin and Manager only

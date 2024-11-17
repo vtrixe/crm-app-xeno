@@ -30,7 +30,16 @@ model Role {
   users            UserRole[]
   WhitelistedEmail WhitelistedEmail[]
 }
+model CampaignAudienceSegment {
+  campaignId       Int
+  audienceSegmentId Int
+  campaign         Campaign           @relation(fields: [campaignId], references: [id])
+  audienceSegment  AudienceSegment    @relation(fields: [audienceSegmentId], references: [id])
 
+  @@id([campaignId, audienceSegmentId])  // Composite primary key
+  @@index([campaignId])
+  @@index([audienceSegmentId])
+}
 model UserRole {
   id               Int                @id @default(autoincrement())
   userId           Int
@@ -58,12 +67,13 @@ model Campaign {
   endDate          DateTime
   budget           Float
   targetAudience   String
-  messageTemplate  String             // Added field for message content
+  messageTemplate  String             @db.Text
   status           CampaignStatus     @default(DRAFT)
   createdBy        Int              
   updatedBy        Int              
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+
 
   // Relations
   creator          User               @relation("CreatedCampaigns", fields: [createdBy], references: [id])
@@ -75,6 +85,7 @@ model Campaign {
   @@index([status])
   @@index([createdBy])
   @@index([updatedBy])
+  audienceSegments CampaignAudienceSegment[]
 }
 
 enum CampaignStatus {
@@ -108,10 +119,10 @@ model CampaignStats {
 model CampaignHistory {
   id               Int                @id @default(autoincrement())
   campaignId       Int
-  action           String             // e.g., 'STATUS_CHANGE', 'BUDGET_UPDATE', 'TEMPLATE_UPDATE'
-  oldValue         String             // Previous value before the change
-  newValue         String             // New value after the change
-  updatedBy        Int                // Added to track who made the change
+  action           String             
+  oldValue         String            @db.Text       
+  newValue         String              @db.Text     
+  updatedBy        Int                
   updatedAt        DateTime           @default(now())
   
   campaign         Campaign           @relation(fields: [campaignId], references: [id])
@@ -151,6 +162,7 @@ model AudienceSegment {
   user             User               @relation(fields: [createdBy], references: [id])
 
   @@index([createdBy])
+  campaigns CampaignAudienceSegment[]
 }
 
 model SegmentFilter {
@@ -182,11 +194,11 @@ model Message {
   id               Int                @id @default(autoincrement())
   campaignId       Int                // Links the message to a campaign
   customerId       Int                // Links the message to the customer
-  content          String             // The actual message content sent to the customer
+  content          String             @db.Text
   status           MessageStatus      @default(PENDING) // Tracks delivery status
   sentAt           DateTime?          // Timestamp when the message was sent
   deliveredAt      DateTime?          // Timestamp when the message was delivered
-  deliveryReceipt  String?            // Optional field to store additional metadata from the provider
+  deliveryReceipt  String?            @db.Text
   createdAt        DateTime           @default(now())
 
   campaign         Campaign           @relation(fields: [campaignId], references: [id])

@@ -40,7 +40,7 @@ passport.use(
           const whitelisted = await prisma.whitelistedEmail.findUnique({
             where: { email },
           });
-          const roleId = whitelisted ? whitelisted.roleId : 4; // Default role (ensure this role exists in DB)
+          const roleId = whitelisted ? whitelisted.roleId : 1; // Default role (ensure this role exists in DB)
 
          
           const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
@@ -58,7 +58,7 @@ passport.use(
             },
           });
 
-          // Assign role to the new user
+ 
           await prisma.userRole.create({
             data: {
               userId: user.id,

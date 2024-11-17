@@ -122,29 +122,59 @@ export class AudienceSegmentationService {
   async calculateSegmentSize(segmentId: number) {
     const segment = await this.prisma.audienceSegment.findUnique({
       where: { id: segmentId },
-      include: { filters: true }
+      include: { filters: true },
     });
-
-    if (!segment) return;
-
-    let whereConditions: { [key: string]: any } = {};
-    segment.filters.forEach(filter => {
-      whereConditions[filter.field] = {
-        [filter.operator]: filter.value || filter.dateValue
-      };
+  
+    if (!segment) throw new Error(`Segment with ID ${segmentId} not found.`);
+  
+    // Build dynamic where conditions
+    const whereConditions: any = {};
+    segment.filters.forEach((filter) => {
+      if (filter.field === "lastVisited" && filter.dateValue) {
+        whereConditions[filter.field] = {
+          [this.mapOperator(filter.operator)]: filter.dateValue,
+        };
+      } else if (filter.value !== undefined) {
+        whereConditions[filter.field] = {
+          [this.mapOperator(filter.operator)]: filter.value,
+        };
+      }
     });
-
+  
+    // Fetch matching customers
     const count = await this.prisma.customer.count({
-      where: whereConditions
+      where: whereConditions,
     });
-
+  
+    console.log(`Segment ID ${segmentId} has ${count} matching users.`);
+  
+    // Update audience size
     await this.prisma.audienceSegment.update({
       where: { id: segmentId },
-      data: { audienceSize: count }
+      data: { audienceSize: count },
     });
-
-
-await this.redis.del(`segment:${segmentId}`);
+  
+    // Clear relevant Redis cache
+    await this.redis.del(`segment:${segmentId}`);
     await this.redis.del('all-segments');
   }
+  
+  // Helper function to map operators to Prisma-compatible syntax
+  private mapOperator(operator: string): string {
+    const operatorMap: Record<string, string> = {
+      ">": "gt",
+      ">=": "gte",
+      "<": "lt",
+      "<=": "lte",
+      "=": "equals",
+    };
+  
+    if (!operatorMap[operator]) {
+      throw new Error(`Unsupported operator: ${operator}`);
+    }
+  
+    return operatorMap[operator];
+  }
+  
+  
 }

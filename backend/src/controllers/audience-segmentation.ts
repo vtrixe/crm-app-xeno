@@ -61,4 +61,15 @@ export class AudienceSegmentController {
     }
     res.json(segment);
   }
+
+  async validateSegmentSize(req: AuthRequest, res: Response) {
+    try {
+      const segmentId = Number(req.params.id);
+      await this.segmentService.calculateSegmentSize(segmentId);
+      res.status(200).json({ message: `Audience size for segment ${segmentId} validated.` });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  }
+  
 }
