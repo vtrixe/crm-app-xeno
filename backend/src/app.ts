@@ -15,6 +15,7 @@ dotenv.config();
 class App {
   public app: express.Application;
   private port: number = parseInt(process.env.PORT || '5000', 10);
+  private FRONTEND_URL = 'https://crm-app-xeno.vercel.app';
 
   constructor() {
     this.app = express();
@@ -37,8 +38,10 @@ class App {
   private initializeMiddleware() {
     this.app.set('trust proxy', 1); 
     this.app.use(cors({
-      origin: 'https://crm-app-xeno.vercel.app', // Specify your frontend domain
+      origin: this.FRONTEND_URL,
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
     }));
     this.app.use(express.json());
     this.app.use(
@@ -46,12 +49,12 @@ class App {
         secret: process.env.SESSION_SECRET || 'your-secret-key',
         resave: false,
         saveUninitialized: false,
+        proxy: true,
         cookie: {
-          secure: true, // Set to true for HTTPS
+          secure: true,
           httpOnly: true,
           sameSite: 'none',
-          maxAge: 24 * 60 * 60 * 1000, // 24 hours
-          domain: '.onrender.com', // Match your backend domain
+          maxAge: 24 * 60 * 60 * 1000,
         },
       })
     );
